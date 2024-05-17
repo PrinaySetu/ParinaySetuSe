@@ -7,7 +7,7 @@ const mailSender = require("../utils/mailSender");
 
 exports.signup = async (req, res) => {
     try {
-        const {firstName , lastName, email, password, confirmPassword,userType} = req.body;
+        const {firstName , lastName, email, password, confirmPassword,userType,otp} = req.body;
 
         if(!firstName || !lastName || !email || !password ||!confirmPassword||! !userType){
             return res.status(400).json({msg:"All fields are required"})
