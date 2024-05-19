@@ -8,9 +8,9 @@ const mailSender = require("../utils/mailSender");
 exports.signup = async (req, res) => {
     try {
         const {firstName , lastName, email, password, confirmPassword,userType,otp} = req.body;
-
-        if(!firstName || !lastName || !email || !password ||!confirmPassword||! !userType){
-            return res.status(400).json({msg:"All fields are required"})
+        console.log("Received signup data:", req.body);
+        if(!firstName || !lastName || !email || !password ||!confirmPassword||!userType){
+            return res.status(400).json({msg:"All fields are required",})
         }
         if(password!== confirmPassword){
             return res.status(400).json({msg:"Password and Confirm Password do not match"})
