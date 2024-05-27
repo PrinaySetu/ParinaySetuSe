@@ -26,6 +26,9 @@ const UserSchema = new mongoose.Schema({
         enum:["admin", "user"]
 
     },
+    image: {
+        type: String,
+      },
     token:{
         type: String
     },
