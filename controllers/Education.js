@@ -1,4 +1,5 @@
 const Education = require('../models/education')
+const Profile = require('../models/Profile');
 exports.addEducation = async (req, res) => {
     try {
         const {profileId , seconday, secondayYear, 

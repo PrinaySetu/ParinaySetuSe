@@ -3,83 +3,99 @@
 const { uploadImageToCloudinary } = require('../utils/imageUploader');
 
 exports.createProfile = async (req, res) => {
-    try {
-         // Extract profile data from the request body
+  try {
+    // Extract profile data from the request body
     const {
-        fatherName,
-        motherName,
-        guardianName,
-        guardianRelation,
-        birthDate,
-        birthPlace,
-        birthTime,
-        gender,
-        height,
-        weight,
-        bloodGroup,
-        color,
-        feast,
-        previousDisease,
-        identityMark,
-        maritalStatus,
-        residenceType,
-        gotra,
-        gotraMama,
-        religion,
-        caste,
-        upcaste,
-        manglikStatus
-      } = req.body;
-  
-      // Create a new profile data object with non-empty fields
-      const profileData = {
-        fatherName: fatherName ? fatherName.trim() : undefined,
-        motherName: motherName ? motherName.trim() : undefined,
-        guardianName: guardianName ? guardianName.trim() : undefined,
-        guardianRelation: guardianRelation ? guardianRelation.trim() : undefined,
-        birthDate: birthDate ? new Date(birthDate) : undefined,
-        birthPlace: birthPlace ? birthPlace.trim() : undefined,
-        birthTime: birthTime ? birthTime.trim() : undefined,
-        gender: gender ? gender.trim() : undefined,
-        height: height ? height.trim() : undefined,
-        weight: weight ? weight.trim() : undefined,
-        bloodGroup: bloodGroup ? bloodGroup.trim() : undefined,
-        color: color ? color.trim() : undefined,
-        feast: feast ? feast.trim() : undefined,
-        previousDisease: previousDisease ? previousDisease.trim() : undefined,
-        identityMark: identityMark ? identityMark.trim() : undefined,
-        maritalStatus: maritalStatus ? maritalStatus.trim() : undefined,
-        residenceType: residenceType ? residenceType.trim() : undefined,
-        gotra: gotra ? gotra.trim() : undefined,
-        gotraMama: gotraMama ? gotraMama.trim() : undefined,
-        religion: religion ? religion.trim() : undefined,
-        caste: caste ? caste.trim() : undefined,
-        upcaste: upcaste ? upcaste.trim() : undefined,
-        manglikStatus: manglikStatus === true  // Defaults to false if not explicitly set to true
-      };
-  
-      // Remove undefined values from profileData
-      Object.keys(profileData).forEach(key => profileData[key] === undefined ? delete profileData[key] : {});
-  
-      // Create a new profile instance
-      const newProfile = new Profile(profileData);
-  
-      // Save the new profile to the database
-      const savedProfile = await newProfile.save();
-  
-      console.log(savedProfile);
-        return res.status(200).json({
-            success: true,
-            message: "Profile Created Successfully"
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            error: error.message
-        });
+      fatherName,
+      motherName,
+      guardianName,
+      guardianRelation,
+      birthDate,
+      birthPlace,
+      birthTime,
+      gender,
+      height,
+      weight,
+      bloodGroup,
+      color,
+      feast,
+      previousDisease,
+      identityMark,
+      maritalStatus,
+      residenceType,
+      gotra,
+      gotraMama,
+      religion,
+      caste,
+      upcaste,
+      manglikStatus
+    } = req.body;
+    
+    const id = req.user.id;
+
+    // Find the user by id
+    const userDetails = await User.findById(id);
+    if (!userDetails) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
     }
-}
+
+    // Create a new profile data object
+    const profileData = {
+      fatherName: fatherName ? fatherName.trim() : undefined,
+      motherName: motherName ? motherName.trim() : undefined,
+      guardianName: guardianName ? guardianName.trim() : undefined,
+      guardianRelation: guardianRelation ? guardianRelation.trim() : undefined,
+      birthDate: birthDate ? new Date(birthDate) : undefined,
+      birthPlace: birthPlace ? birthPlace.trim() : undefined,
+      birthTime: birthTime ? birthTime.trim() : undefined,
+      gender: gender ? gender.trim() : undefined,
+      height: height ? height.trim() : undefined,
+      weight: weight ? weight.trim() : undefined,
+      bloodGroup: bloodGroup ? bloodGroup.trim() : undefined,
+      color: color ? color.trim() : undefined,
+      feast: feast ? feast.trim() : undefined,
+      previousDisease: previousDisease ? previousDisease.trim() : undefined,
+      identityMark: identityMark ? identityMark.trim() : undefined,
+      maritalStatus: maritalStatus ? maritalStatus.trim() : undefined,
+      residenceType: residenceType ? residenceType.trim() : undefined,
+      gotra: gotra ? gotra.trim() : undefined,
+      gotraMama: gotraMama ? gotraMama.trim() : undefined,
+      religion: religion ? religion.trim() : undefined,
+      caste: caste ? caste.trim() : undefined,
+      upcaste: upcaste ? upcaste.trim() : undefined,
+      manglikStatus: manglikStatus === true // Defaults to false if not explicitly set to true
+    };
+
+    // Remove undefined values from profileData
+    Object.keys(profileData).forEach(key => profileData[key] === undefined ? delete profileData[key] : {});
+
+    // Create a new profile instance
+    const newProfile = new Profile(profileData);
+
+    // Save the new profile to the database
+    const savedProfile = await newProfile.save();
+
+    // Update user's additionalDetails field with the ID of the newly created profile
+    userDetails.additionalDetails = savedProfile._id;
+    await userDetails.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile Created Successfully",
+      data: savedProfile
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 
 exports.updateProfile = async (req, res) => {
     
@@ -317,20 +333,27 @@ exports.removeRecommendedProfile = async (req, res) => {
 
   exports.getAllUserDetails = async (req, res) => {
     try {
-      const id = req.user.id
+      const id = req.user.id;
       const userDetails = await User.findById(id)
-        .populate("additionalDetails")
-        .exec()
-      console.log(userDetails)
+        .populate('additionalDetails')
+        .exec();
+  
+      if (!userDetails) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found',
+        });
+      }
+  
       res.status(200).json({
         success: true,
-        message: "User Data fetched successfully",
+        message: 'User Data fetched successfully',
         data: userDetails,
-      })
+      });
     } catch (error) {
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: error.message,
-      })
+      });
     }
-  }
+  };

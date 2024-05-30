@@ -1,5 +1,5 @@
 const Contacts = require('../models/Contacts');
-
+const Profile = require('../models/Profile');
 exports.createContacts = async(req , res)=>{
     try {
         const {profileId,contactNumber, facebook, instagram, whatsappNumber, backupContact, permanentAddress, currentAddress} = req.body;

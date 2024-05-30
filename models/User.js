@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const Profile = require('./Profile')
 const UserSchema = new mongoose.Schema({
     firstName:{
         type: String,
