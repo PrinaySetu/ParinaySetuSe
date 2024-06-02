@@ -4,7 +4,7 @@ const Profile = require('../models/Profile')
 exports.addFatherFamily = async(req , res)=>{
     try{
         const {
-            profileId,
+            
             grandFather,
             grandMother,
             grandFatherAge,
@@ -13,7 +13,7 @@ exports.addFatherFamily = async(req , res)=>{
             bua,
             chacha
         } = req.body
-
+        const profileId = req.user.additionalDetails._id;
         if(!profileId){
             return res.status(400).json({message:'Profile ID is required'})
         }

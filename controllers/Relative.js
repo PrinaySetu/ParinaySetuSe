@@ -3,10 +3,11 @@ const Profile = require('../models/Profile')
 
 exports.addRelative = async(req , res)=>{
     try {
-        const {profileId ,firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
+        const {firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
             secondRelativeName, secondRelativeRelation, secondRelativeContact, secondRelativeAddress
         } = req.body
-
+        
+        const profileId = req.user.additionalDetails._id
         if(!ObjectId.isValid(profileId)){
             return res.status(400).json({message:'Profile ID is required'})
         }

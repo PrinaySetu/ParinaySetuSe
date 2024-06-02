@@ -2,7 +2,7 @@ const Education = require('../models/education')
 const Profile = require('../models/Profile');
 exports.addEducation = async (req, res) => {
     try {
-        const {profileId , seconday, secondayYear, 
+        const {seconday, secondayYear, 
             secondayBoard, secondayMarks, 
             seniorSecondary, seniorSecondaryYear, 
             seniorSecondaryBoard, seniorSecondaryMarks, 
@@ -13,6 +13,8 @@ exports.addEducation = async (req, res) => {
              postGraduationMarks, other, diploma, 
              diplomaYear, diplomaBoard, 
              diplomaMarks} = req.body;
+             
+             const profileId = req.user.additionalDetails._id;
         if (!profileId) {
             return res.status(400).json({ message: 'Profile ID is required' });}
         const newEducation = new Education({
@@ -40,7 +42,8 @@ exports.addEducation = async (req, res) => {
             
          
     } catch (error) {
-        console.log('Error in addEducation', error);
+        // console.log('Error in addEducation', error);
+        console.log("This is user",req.user)
         return res.status(500).json({ message: 'Cannot add education details',  });
     }
 }

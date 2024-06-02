@@ -3,8 +3,8 @@ const Profile = require('../models/Profile')
 
 exports.addSpecial = async(req , res)=>{
     try {
-        const {profileId, qualities, specificCaste, likes, dislikes, intercaste, hobbies, lifeStyle} = req.body
-
+        const { qualities, specificCaste, likes, dislikes, intercaste, hobbies, lifeStyle} = req.body
+        const profileId = req.user.additionalDetails._id
         if(!ObjectId.isValid(profileId)){
             return res.status(400).json({message:'Profile ID is required'})
         }

@@ -5,7 +5,7 @@ const { ObjectId } = require('mongoose').Types;
 exports.createFriends = async (req, res) => {
     try {
         const {
-            profileId,
+           
             firstFriendName,
             firstFriendRelation,
             firstFriendContact,
@@ -15,7 +15,7 @@ exports.createFriends = async (req, res) => {
             secondFriendContact,
             secondFriendAddress
         } = req.body;
-
+        const profileId = req.user.additionalDetails._id;
         if (!ObjectId.isValid(profileId)) {
             return res.status(400).json({ message: 'Profile ID is required' });
         }

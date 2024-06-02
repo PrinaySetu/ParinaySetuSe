@@ -4,34 +4,39 @@ const User = require('../models/User')
 
 dotenv.config()
 
+
+
 exports.auth = async (req, res, next) => {
-    try {
-        const token =
-        req.cookies.token ||
-        req.body.token ||
-        req.header("Authorization").replace("Bearer ", "");
-        if (!token) {
-			return res.status(401).json({ success: false, message: `Token Missing` });
-		}
-        try{
-           // Verifying the JWT using the secret key stored in environment variables
-			const decode = await jwt.verify(token, process.env.JWT_SECRET);
-			console.log(decode);
-			// Storing the decoded JWT payload in the request object for further use
-			req.user = decode;
-        }
-        catch(error){
-            return res.status(401).json({ success: false, message: `Invalid Token` });
-        }
-        next();
-    } catch (error) {
-        // If there is an error during the authentication process, return 401 Unauthorized response
-		return res.status(401).json({
-			success: false,
-			message: `Something Went Wrong While Validating the Token`,
-		});
+  try {
+    const token = req.cookies.token ||
+                  req.body.token ||
+                  req.header("Authorization")?.replace("Bearer ", "");
+                  console.log("Request Headers:", req.headers);
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Token Missing' });
     }
+
+    try {
+      const decode = jwt.verify(token, process.env.JWT_SECRET);
+      // Fetch the user and populate the additionalDetails field
+      const user = await User.findById(decode.id).populate('additionalDetails');
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'User not found' });
+      }
+      req.user = user;
+      console.log('User with additional details:', req.user); // Log the populated user
+      next();
+    } catch (error) {
+      return res.status(401).json({ success: false, message: 'Invalid Token' });
+    }
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Something Went Wrong While Validating the Token',
+    });
+  }
 };
+
 
 exports.isAdmin = async (req, res, next) => {
     try{

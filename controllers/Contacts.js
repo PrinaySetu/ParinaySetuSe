@@ -2,7 +2,8 @@ const Contacts = require('../models/Contacts');
 const Profile = require('../models/Profile');
 exports.createContacts = async(req , res)=>{
     try {
-        const {profileId,contactNumber, facebook, instagram, whatsappNumber, backupContact, permanentAddress, currentAddress} = req.body;
+        const {contactNumber, facebook, instagram, whatsappNumber, backupContact, permanentAddress, currentAddress} = req.body;
+        const profileId = req.user.additionalDetails._id;
         if(!profileId) return res.status(400).json({message: 'Profile ID is required'});
         const newContact = new Contacts({
             contactNumber, facebook, instagram, whatsappNumber, backupContact, permanentAddress, currentAddress

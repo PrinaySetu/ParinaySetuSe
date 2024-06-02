@@ -3,8 +3,8 @@ const Profile = require('../models/Profile')
 
 exports.addWorking = async(req , res)=>{
     try {
-        const {profileId ,incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility} = req.body
-
+        const {incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility} = req.body
+        const profileId = req.user.additionalDetails._id
         if(!ObjectId.isValid(profileId)){
             return res.status(400).json({message:'Profile ID is required'})
         }

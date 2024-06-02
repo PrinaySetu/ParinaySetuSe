@@ -5,7 +5,7 @@ const Profile = require('../models/Profile');
 
 exports.uploadDocuments = async (req, res) => {
     try {
-        const { profileId } = req.body;
+        const profileId = req.user.additionalDetails._id;
         if (!profileId) {
             return res.status(400).json({ message: 'Profile ID is required' });
         }

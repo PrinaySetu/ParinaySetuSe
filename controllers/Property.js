@@ -3,13 +3,13 @@ const Profile = require('../models/Profile')
 
 exports.addProperty = async(req , res)=>{
     try {
-        const {profileId ,houseOwner, houseAddress, housePrice , houseLoan , 
+        const {houseOwner, houseAddress, housePrice , houseLoan , 
             flatOwner, flatAddress, flatType, flatPrice, flatLoan,
             landOwner, landAddress, landPrice, landLoan,
             farmingOwner, farmingAddress, farmingPrice, farmingLoan,
             shopOwner, shopAddress, shopPrice, shopLoan
         } = req.body
-
+        const profileId = req.user.additionalDetails._id;
         if(!ObjectId.isValid(profileId)){
             return res.status(400).json({message:'Profile ID is required'})
         }
