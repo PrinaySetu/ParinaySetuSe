@@ -1,72 +1,118 @@
 const Relative = require('../models/Relatives')
 const Profile = require('../models/Profile')
 
-exports.addRelative = async(req , res)=>{
+const { ObjectId } = require('mongoose').Types;
+
+exports.addRelative = async (req, res) => {
     try {
-        const {firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
+        const {
+            firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
             secondRelativeName, secondRelativeRelation, secondRelativeContact, secondRelativeAddress
-        } = req.body
-        
-        const profileId = req.user.additionalDetails._id
-        if(!ObjectId.isValid(profileId)){
-            return res.status(400).json({message:'Profile ID is required'})
+        } = req.body;
+
+        // Ensure the user and profile ID are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
+        }
+      
+        const profileId = req.user.additionalDetails;
+        if (!(profileId)) {
+            return res.status(400).json({ message: 'Profile ID is required' });
         }
 
+        // Check if the profile already has a relative entry
+        const profile = await Profile.findById(profileId).populate('relative');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        if (profile.relative) {
+            return res.status(400).json({ message: 'Relative details already exist for this profile' });
+        }
+
+        // Create new Relative document
         const newRelative = new Relative({
             firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
             secondRelativeName, secondRelativeRelation, secondRelativeContact, secondRelativeAddress
-        })
+        });
 
-        await newRelative.save()
+        await newRelative.save();
 
-        const updatedProfile = await Profile.findByIdAndUpdate(
-            profileId,
-            {$push:{relative:newRelative._id}},
-            {new:true}
-        ).populate('relative')
+        // Update the Profile document to associate the new Relative
+        profile.relative = newRelative._id;
+        await profile.save();
 
         res.status(200).json({
-            message:'Relative added and profile updated successfully',
-            data:updatedProfile
-        })
+            message: 'Relative added and profile updated successfully',
+            data: newRelative
+        });
 
     } catch (error) {
-        console.error('Error adding relative:', error)
-        res.status(500).json({message:'Internal server error'})
+        console.error('Error adding relative:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-}
-exports.updateRelative = async (req , res)=>{
-    try {
-        const {relativeId, firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
-            secondRelativeName, secondRelativeRelation, secondRelativeContact, secondRelativeAddress
-        } = req.body
+};
 
-        if(!ObjectId.isValid(relativeId)){
-            return res.status(400).json({message:'Invalid Relative ID'})
+
+exports.updateRelative = async (req, res) => {
+    try {
+        const {
+            firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
+            secondRelativeName, secondRelativeRelation, secondRelativeContact, secondRelativeAddress
+        } = req.body;
+
+        // Check if req.user and req.user.additionalDetails are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
         }
 
+        // Retrieve the profile using the additionalDetails reference in the User schema
+        const profile = await Profile.findById(req.user.additionalDetails).populate('relatives');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        // Extract the relativeId from the profile's relatives field
+        const relativeId = profile.relatives;
+        if (!relativeId) {
+            return res.status(400).json({ message: 'Relative ID is required' });
+        }
+
+        // Fetch existing relative data
+        const existingRelative = await Relative.findById(relativeId);
+        if (!existingRelative) {
+            return res.status(404).json({ message: 'Relative not found' });
+        }
+
+        // Merge existing data with new data
+        const updatedData = {
+            firstRelativeName: firstRelativeName || existingRelative.firstRelativeName,
+            firstRelativeRelation: firstRelativeRelation || existingRelative.firstRelativeRelation,
+            firstRelativeContact: firstRelativeContact || existingRelative.firstRelativeContact,
+            firstRelativeAddress: firstRelativeAddress || existingRelative.firstRelativeAddress,
+            secondRelativeName: secondRelativeName || existingRelative.secondRelativeName,
+            secondRelativeRelation: secondRelativeRelation || existingRelative.secondRelativeRelation,
+            secondRelativeContact: secondRelativeContact || existingRelative.secondRelativeContact,
+            secondRelativeAddress: secondRelativeAddress || existingRelative.secondRelativeAddress
+        };
+
+        // Update the relative document in the database
         const updatedRelative = await Relative.findByIdAndUpdate(
             relativeId,
-            {firstRelativeName, firstRelativeRelation, firstRelativeContact, firstRelativeAddress,
-                secondRelativeName, secondRelativeRelation, secondRelativeContact, secondRelativeAddress
-            },
-            {new:true}
-        )
+            updatedData,
+            { new: true }
+        );
 
-        if(!updatedRelative){
-            return res.status(404).json({message:'Relative not found'})
-        }
-
-        res.status(200).json({
-            message:'Relative updated successfully',
-            data:updatedRelative
-        })
+        return res.status(200).json({
+            message: 'Relative updated successfully',
+            data: updatedRelative
+        });
 
     } catch (error) {
-        console.error('Error updating relative:', error)
-        res.status(500).json({message:'Internal server error'})
+        console.error('Error updating relative:', error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
 
 // DELETE RELATIVE API
 exports.deleteRelative = async (req , res)=>{

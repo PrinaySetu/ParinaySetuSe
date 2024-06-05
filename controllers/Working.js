@@ -1,66 +1,114 @@
 const Working = require('../models/working')
 const Profile = require('../models/Profile')
 
-exports.addWorking = async(req , res)=>{
+const { ObjectId } = require('mongoose').Types;
+
+exports.addWorking = async (req, res) => {
     try {
-        const {incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility} = req.body
-        const profileId = req.user.additionalDetails._id
-        if(!ObjectId.isValid(profileId)){
-            return res.status(400).json({message:'Profile ID is required'})
+        const { incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility } = req.body;
+
+        // Ensure the user and profile ID are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
         }
 
+        const profileId = req.user.additionalDetails;
+        if (!ObjectId.isValid(profileId)) {
+            return res.status(400).json({ message: 'Profile ID is required' });
+        }
+
+        // Check if the profile already has a working entry
+        const profile = await Profile.findById(profileId).populate('working');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        if (profile.working) {
+            return res.status(400).json({ message: 'Working details already exist for this profile' });
+        }
+
+        // Create new Working document
         const newWorking = new Working({
             incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility
-        })
+        });
 
-        await newWorking.save()
+        await newWorking.save();
 
-        const updatedProfile = await Profile.findByIdAndUpdate(
-            profileId,
-            {$push:{working:newWorking._id}},
-            {new:true}
-        ).populate('working')
+        // Update the Profile document to associate the new Working
+        profile.working = newWorking._id;
+        await profile.save();
 
         res.status(200).json({
-            message:'Working added and profile updated successfully',
-            data:updatedProfile
-        })
+            message: 'Working added and profile updated successfully',
+            data: newWorking
+        });
 
     } catch (error) {
-        console.error('Error adding working:', error)
-        res.status(500).json({message:'Internal server error'})
+        console.error('Error adding working:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
 
 // update working
-exports.updateWorking = async (req , res)=>{
+exports.updateWorking = async (req, res) => {
     try {
-        const {workingId, incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility} = req.body
+        const {
+            incomeSource, employerName, natureWork, completedPeriod, annualIncome,
+            otherSources, financialResponsibility, memberResponsibility
+        } = req.body;
 
-        if(!ObjectId.isValid(workingId)){
-            return res.status(400).json({message:'Invalid Working ID'})
+        // Check if req.user and req.user.additionalDetails are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
         }
 
+        // Retrieve the profile using the additionalDetails reference in the User schema
+        const profile = await Profile.findById(req.user.additionalDetails).populate('occupation');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        // Extract the workingId from the profile's occupation field
+        const workingId = profile.occupation;
+        if (!workingId) {
+            return res.status(400).json({ message: 'Working ID is required' });
+        }
+
+        // Fetch existing working data
+        const existingWorking = await Working.findById(workingId);
+        if (!existingWorking) {
+            return res.status(404).json({ message: 'Working not found' });
+        }
+
+        // Merge existing data with new data
+        const updatedData = {
+            incomeSource: incomeSource || existingWorking.incomeSource,
+            employerName: employerName || existingWorking.employerName,
+            natureWork: natureWork || existingWorking.natureWork,
+            completedPeriod: completedPeriod || existingWorking.completedPeriod,
+            annualIncome: annualIncome || existingWorking.annualIncome,
+            otherSources: otherSources || existingWorking.otherSources,
+            financialResponsibility: financialResponsibility || existingWorking.financialResponsibility,
+            memberResponsibility: memberResponsibility || existingWorking.memberResponsibility
+        };
+
+        // Update the working document in the database
         const updatedWorking = await Working.findByIdAndUpdate(
             workingId,
-            {incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility},
-            {new:true}
-        )
+            updatedData,
+            { new: true }
+        );
 
-        if(!updatedWorking){
-            return res.status(404).json({message:'Working not found'})
-        }
-
-        res.status(200).json({
-            message:'Working updated successfully',
-            data:updatedWorking
-        })
+        return res.status(200).json({
+            message: 'Working updated successfully',
+            data: updatedWorking
+        });
 
     } catch (error) {
-        console.error('Error updating working:', error)
-        res.status(500).json({message:'Internal server error'})
+        console.error('Error updating working:', error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
 
 // delete working by id
 exports.deleteWorking = async (req , res)=>{

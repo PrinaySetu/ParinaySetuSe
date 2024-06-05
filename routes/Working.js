@@ -4,7 +4,7 @@ const {auth, isuser} = require('../middlewares/auth')
 
 // # const{addWorking , updateWorking, deleteWorking} = require('');
 const {addWorking, updateWorking, deleteWorking} =require('../controllers/Working')
-router.post('/addworking', auth , addWorking);
-router.put('/updateworking', auth , updateWorking);
-router.delete('/deleteworking' , auth , deleteWorking);
+router.post('/addWorking', auth , addWorking);
+router.put('/updateWorking', auth , updateWorking);
+router.delete('/deleteWorking' , auth , deleteWorking);
 module.exports = router;

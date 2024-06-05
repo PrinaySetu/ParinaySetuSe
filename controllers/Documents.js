@@ -5,14 +5,24 @@ const Profile = require('../models/Profile');
 
 exports.uploadDocuments = async (req, res) => {
     try {
-        const profileId = req.user.additionalDetails._id;
+        // Ensure the user and profile ID are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
+        }
+
+        const profileId = req.user.additionalDetails;
         if (!profileId) {
             return res.status(400).json({ message: 'Profile ID is required' });
         }
 
-        const existProfile = await Profile.findById(profileId);
-        if (!existProfile) {
+        // Check if the profile already has a documents entry
+        const profile = await Profile.findById(profileId).populate('documents');
+        if (!profile) {
             return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        if (profile.documents) {
+            return res.status(400).json({ message: 'Documents entry already exists for this profile' });
         }
 
         // Function to upload files to Cloudinary
@@ -63,23 +73,16 @@ exports.uploadDocuments = async (req, res) => {
         // Save the new Documents document
         await newDocuments.save();
 
-        // Update the Profile with the new Documents ID
-        // existProfile.documents.push(newDocuments._id);
-        // await existProfile.save();
-        const updatedProfile = await Profile.findByIdAndUpdate({
-            _id: profileId
-        },{
-            $set: {
-                documents: newDocuments._id
-            }
-        }, {new: true});
-        
+        // Update the profile to reference the new Documents entry
+        profile.documents = newDocuments._id;
+        await profile.save();
+
         return res.status(201).json({
             message: 'Documents uploaded successfully',
             documents: newDocuments
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error in uploadDocuments:", error);
         return res.status(500).json({
             success: false,
             message: "Failed to upload documents. Please try again."

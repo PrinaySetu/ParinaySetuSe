@@ -1,10 +1,9 @@
 const FamilyDetails = require('../models/FamilyDetails');
 const Profile = require('../models/Profile');
-
+const { ObjectId } = require('mongoose').Types;
 exports.addFamilyDetails = async (req, res) => {
     try {
         const {
-            
             fatherAge,
             fatherHealth,
             fatherDeathAge,
@@ -16,10 +15,25 @@ exports.addFamilyDetails = async (req, res) => {
             brothers, // Array of brothers
             sisters   // Array of sisters
         } = req.body;
-        const profileId = req.user.additionalDetails._id;
 
+        // Ensure the user and profile ID are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
+        }
+
+        const profileId = req.user.additionalDetails;
         if (!profileId) {
             return res.status(400).json({ message: 'Profile ID is required' });
+        }
+
+        // Check if the profile already has a familyDetails entry
+        const profile = await Profile.findById(profileId).populate('familyDetails');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        if (profile.familyDetails) {
+            return res.status(400).json({ message: 'Family details entry already exists for this profile' });
         }
 
         // Create new FamilyDetails document
@@ -39,15 +53,12 @@ exports.addFamilyDetails = async (req, res) => {
         await newFamilyDetails.save();
 
         // Update the Profile document to associate the new FamilyDetails
-        const updatedProfile = await Profile.findByIdAndUpdate(
-            profileId,
-            { $push: { familyDetails: newFamilyDetails._id } },
-            { new: true }
-        ).populate('familyDetails');
+        profile.familyDetails = newFamilyDetails._id;
+        await profile.save();
 
         res.status(200).json({
             message: 'Family Details added and profile updated successfully',
-            data: updatedProfile
+            data: newFamilyDetails
         });
 
     } catch (error) {
@@ -58,12 +69,35 @@ exports.addFamilyDetails = async (req, res) => {
 
 exports.updateFamilyDetails = async (req, res) => {
     try {
-        const {familyDetailsId , fatherAge, 
+        const { fatherAge, 
             fatherHealth, fatherDeathAge, 
             fatherDeathYear, motherAge, 
             motherHealth, motherDeathAge, 
             motherDeathYear} = req.body;
-            if (!ObjectID.isValid(familyDetailsId)) {
+
+             // Check if req.user and req.user.additionalDetails are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
+        }
+
+        // Retrieve the profile using the additionalDetails reference in the User schema
+        const profile = await Profile.findById(req.user.additionalDetails).populate('familyDetails');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        // Log the retrieved profile to debug if it has the correct education reference
+        console.log("Retrieved profile:", profile);
+
+        // Extract the familyDetailsId from the profile's familyDetails field
+        const familyDetailsId = profile.familyDetails;
+        console.log("This is familyDetailsId", familyDetailsId);
+
+        if (!familyDetailsId) {
+            return res.status(400).json({ message: 'familyDetailsId ID is required' });
+        }
+
+            if (!(familyDetailsId)) {
                 return res.status(400).json({ message: 'Invalid FamilyDetails ID' });
             }
 
@@ -93,14 +127,37 @@ exports.updateFamilyDetails = async (req, res) => {
 
 exports.updatebrother = async (req, res) => {
     try {
-        const {familyDetailsId, brotherId, 
+        const { brotherId, 
             name, age, health, deathAge, deathYear} = req.body;
-        if (!ObjectID.isValid(familyDetailsId)) {
+             // Check if req.user and req.user.additionalDetails are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
+        }
+
+        // Retrieve the profile using the additionalDetails reference in the User schema
+        const profile = await Profile.findById(req.user.additionalDetails).populate('familyDetails');
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        // Log the retrieved profile to debug if it has the correct education reference
+        console.log("Retrieved profile:", profile);
+
+        // Extract the educationId from the profile's familyDetails field
+        const familyDetailsId = profile.familyDetails;
+        console.log("This is educationId", familyDetailsId);
+
+        if (!familyDetailsId) {
+            return res.status(400).json({ message: 'familyDetailsId ID is required' });
+        }
+
+        if (!(familyDetailsId)) {
             return res.status(400).json({ message: 'Invalid FamilyDetails ID' });
         }
-        if (!ObjectID.isValid(brotherId)) {
+        if (!(brotherId)) {
             return res.status(400).json({ message: 'Invalid Brother ID' });
-        }       
+        }   
+        const familyDetails = await FamilyDetails.findById(familyDetailsId);
         
         let brothers = familyDetails.brother;
         let index = brothers.findIndex((brother) => brother._id == brotherId);
@@ -129,13 +186,13 @@ exports.updatesister = async (req, res) => {
     try {
         const {familyDetailsId, sisterId, 
             name, age, health, deathAge, deathYear} = req.body;
-        if (!ObjectID.isValid(familyDetailsId)) {
+        if (!(familyDetailsId)) {
             return res.status(400).json({ message: 'Invalid FamilyDetails ID' });
         }
-        if (!ObjectID.isValid(sisterId)) {
+        if (!(sisterId)) {
             return res.status(400).json({ message: 'Invalid sister ID' });
         }       
-        
+        const familyDetails = await FamilyDetails.findById(familyDetailsId);
         let sister = familyDetails.sister;
         let index = sister.findIndex((sister) => sister._id == sisterId);
         if(index === -1){
@@ -161,17 +218,17 @@ exports.updatesister = async (req, res) => {
 exports.removeSibling = async (req, res) => {
     try {
         const {familyId , siblingId} = req.body;
-        if (!ObjectID.isValid(familyId)) {
+        if (!(familyId)) {
             return res.status(400).json({ message: 'Invalid FamilyDetails ID' });
         }
-        if (!ObjectID.isValid(siblingId)) {
+        if (!(siblingId)) {
             return res.status(400).json({ message: 'Invalid Sibling ID' });
         }
         const familyDetails = await FamilyDetails.findById(familyId);
         if(!familyDetails) {
             return res.status(404).json({message: 'FamilyDetails not found'});
         }
-        let removeIndex = familyDetails.siblings.findIndex((sibling) => sibling._id == siblingId);
+        let removeIndex = familyDetails.siblings.findIndex((sibling) => sibling._id === siblingId);
         if(removeIndex==-1){
             return res.status(404).json({message: 'Sibling not found'});
         }else{

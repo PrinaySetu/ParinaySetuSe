@@ -2,10 +2,11 @@ const Friends = require('../models/Friends');
 const Profile = require('../models/Profile');
 const { ObjectId } = require('mongoose').Types;
 
+
+
 exports.createFriends = async (req, res) => {
     try {
         const {
-           
             firstFriendName,
             firstFriendRelation,
             firstFriendContact,
@@ -15,22 +16,31 @@ exports.createFriends = async (req, res) => {
             secondFriendContact,
             secondFriendAddress
         } = req.body;
-        const profileId = req.user.additionalDetails._id;
+
+        // Ensure the user and profile ID are defined
+        if (!req.user || !req.user.additionalDetails) {
+            return res.status(400).json({ message: 'User details not found' });
+        }
+
+        const profileId = req.user.additionalDetails;
         if (!ObjectId.isValid(profileId)) {
             return res.status(400).json({ message: 'Profile ID is required' });
         }
 
-        let profile = await Profile.findById(profileId);
+        // Find the profile
+        let profile = await Profile.findById(profileId).populate('friends');
         if (!profile) {
             return res.status(404).json({ message: 'Profile not found' });
         }
 
+        // Check if the friend already exists for the profile
         let friendExist = profile.friends.some((friend) => friend.firstFriendName === firstFriendName);
 
         if (friendExist) {
-            return res.status(400).json({ message: 'Friend already exists' });
+            return res.status(400).json({ message: 'Friend already exists for this profile' });
         }
 
+        // Create a new friend
         const newFriend = await Friends.create({
             firstFriendName,
             firstFriendRelation,
@@ -42,6 +52,7 @@ exports.createFriends = async (req, res) => {
             secondFriendAddress
         });
 
+        // Associate the new friend with the profile
         profile.friends.push(newFriend._id);
         await profile.save();
 
