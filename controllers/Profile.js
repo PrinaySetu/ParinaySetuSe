@@ -100,16 +100,17 @@ exports.createProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     
     try {
-        const { id } = req.params; // Extract profile ID from request parameters
-      // Find the profile by ID in the database
-      const profile = await Profile.findById(id);
+      if (!req.user || !req.user.additionalDetails) {
+        return res.status(400).json({ message: 'User details not found' });
+    }
+
+    // Retrieve the profile using the additionalDetails reference in the User schema
+    const profile = await Profile.findById(req.user.additionalDetails).populate('education');
+    if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+    }
+     
   
-      if (!profile) {
-        return res.status(404).json({
-          success: false,
-          message: 'Profile not found'
-        });
-      }
   
       // Extract updated profile data from the request body
       const {
