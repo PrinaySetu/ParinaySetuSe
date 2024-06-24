@@ -358,3 +358,27 @@ exports.removeRecommendedProfile = async (req, res) => {
       });
     }
   };
+  exports.getUserAdditionalDetails = async (req, res) => {
+    try {
+      const id = req.user.id;
+      const user = await User.findById(id).populate('additionalDetails').exec();
+  
+      if (!user || !user.additionalDetails) {
+        return res.status(404).json({
+          success: false,
+          message: 'Additional details not found',
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'Additional details fetched successfully',
+        data: user.additionalDetails,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
