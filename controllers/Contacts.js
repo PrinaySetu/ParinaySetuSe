@@ -1,5 +1,6 @@
 const Contacts = require('../models/Contacts');
 const Profile = require('../models/Profile');
+const User = require('../models/User');
 exports.createContacts = async (req, res) => {
     try {
         const { contactNumber, facebook, instagram, whatsappNumber, backupContact, permanentAddress, currentAddress } = req.body;
@@ -108,6 +109,49 @@ exports.updateContacts = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Contact update failed. Please try again."
+        });
+    }
+};
+
+// Server-side function
+exports.getUserContacts = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+    
+        if (!user || !user.additionalDetails) {
+            return res.status(404).json({
+                success: false,
+                message: 'Additional details not found',
+            });
+        }
+    
+        const contactId = user.additionalDetails.contacts;
+        console.log("This is id", contactId);
+        if (!contactId) {
+            return res.status(404).json({
+                success: false,
+                message: 'Contacts ID not found in additional details',
+            });
+        }
+    
+        const contactDetails = await Contacts.findById(contactId).exec();
+        if (!contactDetails) {
+            return res.status(404).json({
+                success: false,
+                message: 'Contact details not found',
+            });
+        }
+    
+        res.status(200).json({
+            success: true,
+            message: 'Contact details fetched successfully',
+            data: contactDetails,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
         });
     }
 };

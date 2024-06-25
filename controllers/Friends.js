@@ -1,7 +1,7 @@
 const Friends = require('../models/Friends');
 const Profile = require('../models/Profile');
 const { ObjectId } = require('mongoose').Types;
-
+const User = require('../models/User');
 
 
 exports.createFriends = async (req, res) => {
@@ -132,3 +132,28 @@ exports.deleteFriends = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+exports.getUserFriends = async (req, res) => {
+    try {
+        const userId = req.user.id
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+        if (!user || !user.additionalDetails) {
+            return res.status(404).json({ message: 'Additional details not found' });
+        }
+        const friendsId = user.additionalDetails.frineds;
+        if (!friendsId) {
+            return res.status(404).json({ message: 'Friends ID not found in additional details' });
+        }
+        const friends = await Friends.findById(friendsId).exec();
+        if (!friends) {
+            return res.status(404).json({ message: 'Friends not found' });
+        }
+        return res.status(200).json({ message: 'Friends fetched successfully', data: friends });
+
+    } catch (error) {
+          res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}

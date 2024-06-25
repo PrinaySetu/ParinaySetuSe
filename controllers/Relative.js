@@ -1,6 +1,6 @@
 const Relative = require('../models/Relatives')
 const Profile = require('../models/Profile')
-
+const User = require('../models/User')
 const { ObjectId } = require('mongoose').Types;
 
 exports.addRelative = async (req, res) => {
@@ -145,5 +145,29 @@ exports.deleteRelative = async (req , res)=>{
     } catch (error) {
         console.error('Error deleting relative:', error)
         res.status(500).json({message:'Internal server error'})
+    }
+}
+
+exports.getUserRelative = async(req, res)=>{
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+        if(!user || !user.additionalDetails){
+            return res.status(404).json({message: 'Additional details not found'});
+        }
+        const relativeId = user.additionalDetails.relatives;
+        if(!relativeId){
+            return res.status(404).json({message: 'Relative ID not found in additional details'});
+        }
+        const relative = await Relative.findById(relativeId).exec();
+        if(!relative){
+            return res.status(404).json({message: 'Relative not found'});
+        }
+        return res.status(200).json({message: 'Relative fetched successfully', data: relative});
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
 }

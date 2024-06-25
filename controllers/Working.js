@@ -1,6 +1,6 @@
 const Working = require('../models/working')
 const Profile = require('../models/Profile')
-
+const User = require('../models/User')
 const { ObjectId } = require('mongoose').Types;
 
 exports.addWorking = async (req, res) => {
@@ -143,3 +143,28 @@ exports.deleteWorking = async (req , res)=>{
         res.status(500).json({message:'Internal server error'})
     }
 }
+
+exports.getUserWorking = async(req, res)=>{
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+        if(!user || !user.additionalDetails){
+            return res.status(404).json({message:'Additional details not found'})
+        }
+        const workingId = user.additionalDetails.working;
+        if(!workingId){
+            return res.status(404).json({message:'Working ID not found in additional details'})
+        }
+        const working = await Working.findById(workingId).exec();
+        if(!working){
+            return res.status(404).json({message:'Working not found'})
+        }
+        return res.status(200).json({message:'Working fetched successfully', data:working})
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

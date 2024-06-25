@@ -1,6 +1,6 @@
 const Property = require('../models/Property')
 const Profile = require('../models/Profile')
-
+const User = require('../models/User')
 const { ObjectId } = require('mongoose').Types;
 
 exports.addProperty = async (req, res) => {
@@ -169,3 +169,28 @@ exports.updateProperty = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+exports.getUserProperty = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+        if (!user || !user.additionalDetails) {
+            return res.status(404).json({ message: 'Additional details not found' });
+        }
+        const propertyId = user.additionalDetails.property;
+        if (!propertyId) {
+            return res.status(404).json({ message: 'Property ID not found in additional details' });
+        }
+        const property = await Property.findById(propertyId).exec();
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+        return res.status(200).json({ message: 'Property fetched successfully', data: property });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}

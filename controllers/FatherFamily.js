@@ -1,6 +1,6 @@
 const FatherFamily = require('../models/FatherFamily')
 const Profile = require('../models/Profile')
-
+const User = require('../models/User')
 
 exports.addFatherFamily = async (req, res) => {
     try {
@@ -185,5 +185,30 @@ exports.updateBua = async(req , res)=>{
     } catch (error) {
         console.error('Error updating bua:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+}
+exports.getUserFatherFamily = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+        if (!user || !user.additionalDetails) {
+            return res.status(404).json({ message: 'Additional details not found' });
+        }
+        const fatherFamilyId = user.additionalDetails.fatherFamily;
+        if (!fatherFamilyId) {
+            return res.status(404).json({ message: 'Father Family ID not found in additional details' });
+        }
+        const fatherFamily = await FatherFamily.findById(fatherFamilyId).exec();
+        if (!fatherFamily) {
+            return res.status(404).json({ message: 'Father Family not found' });
+        }
+        return res.status(200).json({ message: 'Father Family fetched successfully', data: fatherFamily });
+
+
+    } catch (error) {
+          res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
 }

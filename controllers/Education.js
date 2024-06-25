@@ -1,5 +1,6 @@
 const Education = require('../models/education')
 const Profile = require('../models/Profile');
+const User = require('../models/User');
 exports.addEducation = async (req, res) => {
     try {
         const {
@@ -130,6 +131,31 @@ exports.updateEducation = async (req, res) => {
         return res.status(500).json({ message: "Error in updating education" });
     }
 };
+ exports.getUserEducation = async(req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).populate('additionalDetails').exec();
+        if(!user || !user.additionalDetails){
+            return res.status(404).json({message: 'Additional details not found'});
+        }
+        const educationId = user.additionalDetails.education;
+        console.log("This is id", educationId);
+        if(!educationId){
+            return res.status(404).json({message: 'Education ID not found in additional details'});
+        }
+        const education = await Education.findById(educationId).exec();
+        if(!education){
+            return res.status(404).json({message: 'Education not found'});
+        }
+        return res.status(200).json({message: 'Education fetched successfully', data: education});
+
+    } catch (error) {
+          res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+ }
 
 // exports.deleteEducation = async (req, res) => {
 //     try {

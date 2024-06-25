@@ -11,7 +11,7 @@ exports.auth = async (req, res, next) => {
     const token = req.cookies.token ||
                   req.body.token ||
                   req.header("Authorization")?.replace("Bearer ", "");
-                  console.log("Request Headers:", req.headers);
+                  // console.log("Request Headers:", req.headers);
     if (!token) {
       return res.status(401).json({ success: false, message: 'Token Missing' });
     }
@@ -24,7 +24,7 @@ exports.auth = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'User not found' });
       }
       req.user = user;
-      console.log('User with additional details:', req.user); // Log the populated user
+      // console.log('User with additional details:', req.user); // Log the populated user
       next();
     } catch (error) {
       return res.status(401).json({ success: false, message: 'Invalid Token' });
