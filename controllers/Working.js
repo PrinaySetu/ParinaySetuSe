@@ -18,7 +18,7 @@ exports.addWorking = async (req, res) => {
         }
 
         // Check if the profile already has a working entry
-        const profile = await Profile.findById(profileId).populate('working');
+        const profile = await Profile.findById(profileId).populate('occupation');
         if (!profile) {
             return res.status(404).json({ message: 'Profile not found' });
         }
