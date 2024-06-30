@@ -5,7 +5,9 @@ const { ObjectId } = require('mongoose').Types;
 
 exports.addWorking = async (req, res) => {
     try {
-        const { incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility } = req.body;
+        const { incomeSource, employerName, natureWork, completedPeriod, 
+            annualIncome, otherSources, financialResponsibility, 
+            memberResponsibility } = req.body;
 
         // Ensure the user and profile ID are defined
         if (!req.user || !req.user.additionalDetails) {
@@ -29,13 +31,14 @@ exports.addWorking = async (req, res) => {
 
         // Create new Working document
         const newWorking = new Working({
-            incomeSource, employerName, natureWork, completedPeriod, annualIncome, otherSources, financialResponsibility, memberResponsibility
+            incomeSource, employerName, natureWork, completedPeriod, annualIncome, 
+            otherSources, financialResponsibility, memberResponsibility
         });
 
         await newWorking.save();
 
         // Update the Profile document to associate the new Working
-        profile.working = newWorking._id;
+        profile.occupation = newWorking._id;
         await profile.save();
 
         res.status(200).json({
@@ -151,7 +154,7 @@ exports.getUserWorking = async(req, res)=>{
         if(!user || !user.additionalDetails){
             return res.status(404).json({message:'Additional details not found'})
         }
-        const workingId = user.additionalDetails.working;
+        const workingId = user.additionalDetails.occupation;
         if(!workingId){
             return res.status(404).json({message:'Working ID not found in additional details'})
         }
