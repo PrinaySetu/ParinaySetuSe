@@ -17,6 +17,8 @@ exports.addFamilyDetails = async (req, res) => {
             sisters   // Array of sisters
         } = req.body;
 
+        console.log('Received data:', req.body); // Log the received data
+
         // Ensure the user and profile ID are defined
         if (!req.user || !req.user.additionalDetails) {
             return res.status(400).json({ message: 'User details not found' });
@@ -74,7 +76,9 @@ exports.updateFamilyDetails = async (req, res) => {
             fatherHealth, fatherDeathAge, 
             fatherDeathYear, motherAge, 
             motherHealth, motherDeathAge, 
-            motherDeathYear} = req.body;
+            motherDeathYear,
+        brother: brothers, // Assign array of brothers directly
+            sister: sisters } = req.body;
 
              // Check if req.user and req.user.additionalDetails are defined
         if (!req.user || !req.user.additionalDetails) {
@@ -115,6 +119,8 @@ exports.updateFamilyDetails = async (req, res) => {
             familyDetails.motherHealth = motherHealth || familyDetails.motherHealth;
             familyDetails.motherDeathAge = motherDeathAge || familyDetails.motherDeathAge;
             familyDetails.motherDeathYear = motherDeathYear || familyDetails.motherDeathYear;
+            familyDetails.brother = brothers || familyDetails.brother;
+            familyDetails.sister = sisters || familyDetails.sister;
             await familyDetails.save();
             return res.status(200).json(
                 {message: 'FamilyDetails updated successfully', 
