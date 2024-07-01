@@ -31,23 +31,16 @@ const MotherFamilySchema = new mongoose.Schema({
     grandMother:{
         type:String
     },
-    grandMother:{
-        type:String
-    },
+   
     grandMotherAge:{
         type:Number
     },
-    grandMotherAge:{
-        type:Number
-    },
+
     grandMotherStatus:{
         type:Boolean,
         default:false
     },
-    grandMotherStatus:{
-        type:Boolean,
-        default:false
-    },
+   
     mama:[mamaSchema],
     mausi:[mausiSchema],
     
