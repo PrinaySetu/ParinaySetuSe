@@ -112,35 +112,7 @@ exports.updateSpecials = async (req, res) => {
     }
 };
 
-exports.deleteSpecial = async(req , res)=>{
-    try {
-        const {profileId ,specialId} = req.body
 
-        if(!ObjectId.isValid(specialId)|| !ObjectId.isValid(profileId)){
-            return res.status(400).json({message:'Invalid Special ID or Profile Id'})
-        }
-
-        const deletedSpecial = await Specials.findByIdAndDelete(specialId)
-
-        if(!deletedSpecial){
-            return res.status(404).json({message:'Special not found'})
-        }
-        const updatedProfile = await Profile.findByIdAndUpdate(
-            profileId,
-            {$pull:{special:specialId}},
-            {new:true}
-        ).populate('special')
-
-        res.status(200).json({
-            message:'Special deleted successfully',
-            data:deletedSpecial
-        })
-
-    } catch (error) {
-        console.error('Error deleting special:', error)
-        res.status(500).json({message:'Internal server error'})
-    }
-}
 
 exports.getUserSpecials = async (req, res) => {
     try {

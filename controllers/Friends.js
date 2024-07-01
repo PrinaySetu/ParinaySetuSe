@@ -117,27 +117,6 @@ exports.updateFriends = async (req, res) => {
     }
 };
 
-exports.deleteFriends = async (req, res) => {
-    try {
-        const { friendsId } = req.body;
-
-        if (!ObjectId.isValid(friendsId)) {
-            return res.status(400).json({ message: 'Invalid Friends ID' });
-        }
-
-        const friends = await Friends.findById(friendsId);
-        if (!friends) {
-            return res.status(404).json({ message: 'Friends not found' });
-        }
-
-        await friends.remove();
-
-        res.status(200).json({ message: 'Friends deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting Friends:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
 
 exports.getUserFriends = async (req, res) => {
     try {

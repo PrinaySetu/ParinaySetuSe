@@ -113,39 +113,7 @@ exports.updateWorking = async (req, res) => {
     }
 };
 
-// delete working by id
-exports.deleteWorking = async (req , res)=>{
-    try {
-        const {profileId , workingId} = req.body
 
-        if(!ObjectId.isValid(profileId) || !ObjectId.isValid(workingId)){
-            return res.status(400).json({message:'Invalid Profile or Working ID'})
-        }
-
-        const working = await Working.findById(workingId)
-
-        if(!working){
-            return res.status(404).json({message:'Working not found'})
-        }
-
-        await Working.findByIdAndDelete(workingId)
-
-        const updatedProfile = await Profile.findByIdAndUpdate(
-            profileId,
-            {$pull:{working:workingId}},
-            {new:true}
-        ).populate('working')
-
-        res.status(200).json({
-            message:'Working deleted and profile updated successfully',
-            data:updatedProfile
-        })
-
-    } catch (error) {
-        console.error('Error deleting working:', error)
-        res.status(500).json({message:'Internal server error'})
-    }
-}
 
 exports.getUserWorking = async(req, res)=>{
     try {

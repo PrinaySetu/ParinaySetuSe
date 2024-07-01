@@ -157,20 +157,3 @@ exports.updateEducation = async (req, res) => {
     }
  }
 
-// exports.deleteEducation = async (req, res) => {
-//     try {
-//         const {educationId} = req.params;
-//         if(!educationId){
-//             return res.status(400).json({message: 'Education ID is required'});
-//         }
-//         const education = await Education.findById(educationId);
-//         if(!education){
-//             return res.status(404).json({message: 'Education not found'});
-//         }
-//         await education.remove();
-//         return res.status(200).json({message: 'Education deleted successfully'});
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({message: "Error in deleting education"})
-//     }
-// }
