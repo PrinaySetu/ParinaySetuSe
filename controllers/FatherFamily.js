@@ -40,9 +40,9 @@ exports.addFatherFamily = async (req, res) => {
             grandMother,
             grandFatherAge,
             grandMotherAge,
-            tau,
-            bua,
-            chacha
+            tau:tau,
+            bua:bua,
+            chacha:chacha
         });
 
         await newFatherFamily.save();
@@ -64,7 +64,7 @@ exports.addFatherFamily = async (req, res) => {
 
 exports.updateFatherFamily = async (req, res) => {
     try {
-        const { grandFather, grandMother, grandFatherAge, grandMotherAge, tau, bua, chacha } = req.body;
+        const { grandFather, grandMother, grandFatherAge, grandMotherAge, tau:tau, bua:bua, chacha:chacha } = req.body;
 
         // Check if req.user and req.user.additionalDetails are defined
         if (!req.user || !req.user.additionalDetails) {
