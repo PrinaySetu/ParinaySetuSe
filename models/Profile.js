@@ -96,7 +96,7 @@ const ProfileSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:'Relatives'
     },
-    frineds:{
+    friends:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Friends'
     },

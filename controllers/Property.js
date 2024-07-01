@@ -19,7 +19,7 @@ exports.addProperty = async (req, res) => {
         }
 
         const profileId = req.user.additionalDetails;
-        if (!ObjectId.isValid(profileId)) {
+        if (!(profileId)) {
             return res.status(400).json({ message: 'Profile ID is required' });
         }
 

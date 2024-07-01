@@ -33,15 +33,12 @@ exports.createFriends = async (req, res) => {
             return res.status(404).json({ message: 'Profile not found' });
         }
 
-        // Check if the friend already exists for the profile
-        let friendExist = profile.friends.some((friend) => friend.firstFriendName === firstFriendName);
-
-        if (friendExist) {
-            return res.status(400).json({ message: 'Friend already exists for this profile' });
-        }
+       if(profile.friends){
+            return res.status(400).json({ message: 'Friends already exist for this profile' });
+       }
 
         // Create a new friend
-        const newFriend = await Friends.create({
+        const newFriend = Friends({
             firstFriendName,
             firstFriendRelation,
             firstFriendContact,
@@ -52,8 +49,8 @@ exports.createFriends = async (req, res) => {
             secondFriendAddress
         });
 
-        // Associate the new friend with the profile
-        profile.friends.push(newFriend._id);
+        await newFriend.save();
+        profile.friends = newFriend._id;
         await profile.save();
 
         res.status(200).json({
@@ -69,7 +66,7 @@ exports.createFriends = async (req, res) => {
 exports.updateFriends = async (req, res) => {
     try {
         const {
-            friendsId,
+            
             firstFriendName,
             firstFriendRelation,
             firstFriendContact,
@@ -80,30 +77,39 @@ exports.updateFriends = async (req, res) => {
             secondFriendAddress
         } = req.body;
 
-        if (!ObjectId.isValid(friendsId)) {
-            return res.status(400).json({ message: 'Invalid Friends ID' });
-        }
+       // Check if req.user and req.user.additionalDetails are defined
+       if (!req.user || !req.user.additionalDetails) {
+        return res.status(400).json({ message: 'User details not found' });
+    }
 
-        const friends = await Friends.findById(friendsId);
-        if (!friends) {
-            return res.status(404).json({ message: 'Friends not found' });
-        }
-
+    // Retrieve the profile using the additionalDetails reference in the User schema
+    const profile = await Profile.findById(req.user.additionalDetails).populate('education');
+    if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+    }
+    const friendsId = profile.friends;
+    if (!friendsId) {
+        return res.status(404).json({ message: 'Friends ID not found in profile' });
+    }
+    const existingFriends = await Friends.findById(friendsId);
         // Update the fields with the provided values (if not null/undefined)
-        friends.firstFriendName = firstFriendName || friends.firstFriendName;
-        friends.firstFriendRelation = firstFriendRelation || friends.firstFriendRelation;
-        friends.firstFriendContact = firstFriendContact || friends.firstFriendContact;
-        friends.firstFriendAddress = firstFriendAddress || friends.firstFriendAddress;
-        friends.secondFriendName = secondFriendName || friends.secondFriendName;
-        friends.secondFriendRelation = secondFriendRelation || friends.secondFriendRelation;
-        friends.secondFriendContact = secondFriendContact || friends.secondFriendContact;
-        friends.secondFriendAddress = secondFriendAddress || friends.secondFriendAddress;
+        const updatedData = {
+            firstFriendName :firstFriendName || existingFriends.firstFriendName,
+            firstFriendRelation : firstFriendRelation || existingFriends.firstFriendRelation,
+            firstFriendContact : firstFriendContact || existingFriends.firstFriendContact,
+            firstFriendAddress : firstFriendAddress || existingFriends.firstFriendAddress,
+            secondFriendName :secondFriendName || existingFriends.secondFriendName,
+            secondFriendRelation: secondFriendRelation || existingFriends.secondFriendRelation,
+            secondFriendContact : secondFriendContact || existingFriends.secondFriendContact,
+            secondFriendAddress : secondFriendAddress || existingFriends.secondFriendAddress,
 
-        await friends.save();
+        }
+       
+       const updatedFriends = await Friends.findByIdAndUpdate(friendsId, updatedData, { new: true });
 
         res.status(200).json({
             message: 'Friends updated successfully',
-            data: friends
+            data: updatedFriends
         });
     } catch (error) {
         console.error('Error updating Friends:', error);
@@ -140,7 +146,7 @@ exports.getUserFriends = async (req, res) => {
         if (!user || !user.additionalDetails) {
             return res.status(404).json({ message: 'Additional details not found' });
         }
-        const friendsId = user.additionalDetails.frineds;
+        const friendsId = user.additionalDetails.friends;
         if (!friendsId) {
             return res.status(404).json({ message: 'Friends ID not found in additional details' });
         }

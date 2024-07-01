@@ -21,12 +21,12 @@ exports.addRelative = async (req, res) => {
         }
 
         // Check if the profile already has a relative entry
-        const profile = await Profile.findById(profileId).populate('relative');
+        const profile = await Profile.findById(profileId).populate('relatives');
         if (!profile) {
             return res.status(404).json({ message: 'Profile not found' });
         }
 
-        if (profile.relative) {
+        if (profile.relatives) {
             return res.status(400).json({ message: 'Relative details already exist for this profile' });
         }
 
@@ -39,7 +39,7 @@ exports.addRelative = async (req, res) => {
         await newRelative.save();
 
         // Update the Profile document to associate the new Relative
-        profile.relative = newRelative._id;
+        profile.relatives = newRelative._id;
         await profile.save();
 
         res.status(200).json({
