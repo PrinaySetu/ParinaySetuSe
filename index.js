@@ -21,7 +21,7 @@ const friends = require('./routes/Friends')
 const profile = require('./routes/Profile')
 const property = require('./routes/Property')
 const working = require('./routes/Working')
-
+const dashboard = require('./routes/Dashboard')
 
 dotenv.config()
 
@@ -75,7 +75,7 @@ app.use('/api/v1/friends', friends)
 app.use('/api/v1/profile', profile)
 app.use('/api/v1/property', property)
 app.use('/api/v1/working', working)
-
+app.use('/api/v1/dashboard', dashboard)
 
 
 
