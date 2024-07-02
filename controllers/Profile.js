@@ -242,50 +242,95 @@ exports.getProfileById = async (req, res) => {
     }
   };
 
-exports.addRecommendedProfile = async (req, res) => {
-  const { id } = req.params; // Extract profile ID from request parameters
-  const { recommendedProfileIds } = req.body; // Extract recommended profile IDs from request body
-
-  try {
-    // Find the profile by ID in the database
-    const profile = await Profile.findById(id);
-
-    if (!profile) {
-      return res.status(404).json({
+  exports.addRecommendedProfile = async (req, res) => {
+    const { id } = req.body; // Extract profile ID from request body
+    const { recommendedProfileIds } = req.body; // Extract recommended profile IDs from request body
+  
+    console.log("Received ID:", id);
+    console.log("Received Recommended Profile IDs:", recommendedProfileIds);
+  
+    try {
+      const user = await User.findById(id).populate('additionalDetails').exec();
+      const profile = user.additionalDetails;
+  
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          message: 'Profile not found',
+        });
+      }
+  
+      if (!Array.isArray(recommendedProfileIds)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Recommended profile IDs must be provided as an array',
+        });
+      }
+  
+      profile.recommendedProfiles.push(...recommendedProfileIds);
+      const updatedProfile = await profile.save();
+  
+      console.log("Updated Profile:", updatedProfile);
+  
+      return res.status(200).json({
+        success: true,
+        message: 'Recommended profiles added successfully',
+        profile: updatedProfile,
+      });
+    } catch (error) {
+      console.error("Error in adding recommended profiles:", error);
+      return res.status(500).json({
         success: false,
-        message: 'Profile not found'
+        error: 'Internal Server Error',
       });
     }
-
-    // Ensure recommendedProfileIds is an array
-    if (!Array.isArray(recommendedProfileIds)) {
-      return res.status(400).json({
+  };
+  exports.updateRecommendedProfiles = async (req, res) => {
+    const { id } = req.body; // Extract profile ID from request body
+    const { recommendedProfileIds } = req.body; // Extract recommended profile IDs from request body
+  
+    console.log("Received ID:", id);
+    console.log("Received Recommended Profile IDs:", recommendedProfileIds);
+  
+    try {
+      const user = await User.findById(id).populate('additionalDetails').exec();
+      const profile = user.additionalDetails;
+  
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          message: 'Profile not found',
+        });
+      }
+  
+      if (!Array.isArray(recommendedProfileIds)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Recommended profile IDs must be provided as an array',
+        });
+      }
+  
+      // Replace existing recommendedProfiles array with the new one
+      profile.recommendedProfiles = recommendedProfileIds;
+      const updatedProfile = await profile.save();
+  
+      console.log("Updated Profile:", updatedProfile);
+  
+      return res.status(200).json({
+        success: true,
+        message: 'Recommended profiles updated successfully',
+        profile: updatedProfile,
+      });
+    } catch (error) {
+      console.error("Error in updating recommended profiles:", error);
+      return res.status(500).json({
         success: false,
-        message: 'Recommended profile IDs must be provided as an array'
+        error: 'Internal Server Error',
       });
     }
-
-    // Add new recommended profile IDs to the existing recommendedProfiles array
-    profile.recommendedProfiles.push(...recommendedProfileIds);
-
-    // Save the updated profile to the database
-    const updatedProfile = await profile.save();
-
-    // Respond with the updated profile data
-    return res.status(200).json({
-      success: true,
-      message: 'Recommended profiles added successfully',
-      profile: updatedProfile
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal Server Error'
-    });
-  }
-};
-
+  };
+  
+  
 exports.removeRecommendedProfile = async (req, res) => {
     const { id } = req.params; // Extract profile ID from request parameters
     const { profileIdToRemove } = req.body; // Extract profile ID to remove from recommendedProfiles

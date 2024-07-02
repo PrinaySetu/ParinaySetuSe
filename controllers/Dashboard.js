@@ -33,3 +33,19 @@ exports.getMainUser = async (req, res) => {
         });
     }
 }
+
+// In your controller
+exports.getAllOtherUsers = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const users = await User.find({ _id: { $ne: userId } }).populate('additionalDetails').exec();
+        console.log('Found users:', users.length);
+        return res.status(200).json({ success: true, users });
+    } catch (error) {
+        console.log("Cannot get other users", error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
