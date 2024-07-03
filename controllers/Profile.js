@@ -428,4 +428,77 @@ exports.removeRecommendedProfile = async (req, res) => {
     }
   };
 
+
+exports.showAllRecommendedProfiles = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const user = await User.findById(id).populate('additionalDetails').exec();
+
+    if (!user || !user.additionalDetails) {
+      return res.status(404).json({
+        success: false,
+        message: 'Additional details not found',
+      });
+    }
+
+    // const recommendedProfiles = await Profile.find({
+    //   _id: { $in: user.additionalDetails.recommendedProfiles },
+    // });
+    const recommendedProfiles = await User.find({
+      _id: { $in: user.additionalDetails.recommendedProfiles },
+    }).populate('additionalDetails').exec();
+    
+    console.log('Recommended Profiles:', recommendedProfiles);
+    res.status(200).json({
+      success: true,
+      message: 'Recommended profiles fetched successfully',
+      data: recommendedProfiles,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
   
+
+// Controller to get a single recommended profile
+exports.getSingleRecommendedProfile = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    // Find the user by ID and populate the additional details
+    const user = await User.findById(id).populate({
+      path: 'additionalDetails',
+      populate: [
+        { path: 'education' },
+        { path: 'occupation' },
+        { path: 'contacts' },
+        { path: 'relatives' },
+        { path: 'friends' },
+        { path: 'familyDetails' },
+        { path: 'fatherFamily' },
+        { path: 'motherFamily' },
+        { path: 'property' },
+        { path: 'documents' },
+        { path: 'special' },
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Check if the additional details exist
+    if (!user.additionalDetails) {
+      return res.status(404).json({ success: false, message: 'Profile details not found' });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
