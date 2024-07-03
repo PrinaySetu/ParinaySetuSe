@@ -502,3 +502,29 @@ exports.getSingleRecommendedProfile = async (req, res) => {
   }
 };
 
+exports.uploadProfilePicture = async (req, res) => {
+  console.log(req.files);
+  try {
+    const id = req.user.id;
+    const user = await User.findById(id).exec();
+    
+  const image = req.files.profilePicture;
+  const result = await uploadImageToCloudinary(image);
+  console.log(result);
+  user.image = result.secure_url;
+  await user.save();
+  res.status(200).json({
+    success: true,
+    message: 'Profile picture uploaded successfully',
+    data: result,
+  });
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+
+    });
+  }
+}
