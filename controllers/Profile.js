@@ -380,10 +380,22 @@ exports.removeRecommendedProfile = async (req, res) => {
   exports.getAllUserDetails = async (req, res) => {
     try {
       const id = req.user.id;
-      const userDetails = await User.findById(id)
-        .populate('additionalDetails')
-        .exec();
-  
+      const userDetails = await User.findById(id).populate({
+        path: 'additionalDetails',
+        populate: [
+          { path: 'education' },
+          { path: 'occupation' },
+          { path: 'contacts' },
+          { path: 'relatives' },
+          { path: 'friends' },
+          { path: 'familyDetails' },
+          { path: 'fatherFamily' },
+          { path: 'motherFamily' },
+          { path: 'property' },
+          { path: 'documents' },
+          { path: 'special' },
+        ],
+      });
       if (!userDetails) {
         return res.status(404).json({
           success: false,
