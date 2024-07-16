@@ -4,10 +4,8 @@ const Documents = require('../models/Documents');
 const Profile = require('../models/Profile');
 exports.uploadDocuments = async (req, res) => {
     console.log("Uploading documents");
+    // console.log("Files ", req.files);
     try {
-        // console.log("Received files:", req.files);
-        // console.log("Received body:", req.body);
-
         if (!req.user || !req.user.additionalDetails) {
             return res.status(400).json({ message: 'User details not found' });
         }
@@ -30,15 +28,14 @@ exports.uploadDocuments = async (req, res) => {
             return res.status(400).json({ message: 'No files were uploaded.' });
         }
 
-        // Function to upload multiple files to Cloudinary
         const uploadFiles = async (files) => {
+            // console.log("Uploading files:", files);
             if (!files) return [];
-            const fileArray = Array.isArray(files) ? files : [files];
-            const uploadPromises = fileArray.map(async (file) => {
+            const uploadPromises = Object.values(files).map(async (file) => {
                 if (file && file.tempFilePath) {
                     try {
-                        const uploaded = await uploadImageToCloudinary(file.tempFilePath);
-                        return uploaded.secure_url;
+                        const result = await uploadImageToCloudinary(file);
+                        return result.secure_url;
                     } catch (error) {
                         console.error("Error uploading file to Cloudinary:", error);
                         return null;
@@ -49,33 +46,30 @@ exports.uploadDocuments = async (req, res) => {
             return (await Promise.all(uploadPromises)).filter(url => url !== null);
         };
 
-        // Upload files and get Cloudinary URLs for each category
-        const uploadedPhotos = await uploadFiles(req.files.photos);
-        const uploadedFamilyPhotos = await uploadFiles(req.files.familyPhoto);
-        const uploadedEducationDocs = await uploadFiles(req.files.educationDocuments);
-        const uploadedIncomeProofs = await uploadFiles(req.files.incomeProofs);
-        const uploadedPropertyProofs = await uploadFiles(req.files.propertyProofs);
-        const uploadedAddressProofs = await uploadFiles(req.files.addressProofs);
-        const uploadedIdProofs = await uploadFiles(req.files.idProofs);
-        const uploadedOtherDocs = await uploadFiles(req.files.otherDocuments);
+        const categories = ['photos', 'familyPhoto', 'educationDocuments', 'incomeProofs', 'propertyProofs', 'addressProofs', 'idProofs', 'otherDocuments'];
+        const uploadedFiles = {};
 
-        // Create a new Documents document with uploaded file URLs
-        const newDocuments = new Documents({
-            photos: uploadedPhotos,
-            familyPhoto: uploadedFamilyPhotos,
-            educationDocuments: uploadedEducationDocs,
-            incomeProofs: uploadedIncomeProofs,
-            propertyProofs: uploadedPropertyProofs,
-            addressProofs: uploadedAddressProofs,
-            idProofs: uploadedIdProofs,
-            otherDocuments: uploadedOtherDocs
-        });
+        for (const category of categories) {
+            const categoryFiles = Object.keys(req.files)
+                .filter(key => key.startsWith(category))
+                .reduce((obj, key) => {
+                    obj[key] = req.files[key];
+                    return obj;
+                }, {});
+            
+            if (Object.keys(categoryFiles).length > 0) {
+                uploadedFiles[category] = await uploadFiles(categoryFiles);
+            } else {
+                uploadedFiles[category] = [];
+            }
+        }
 
-        // Save the new Documents document
+        const newDocuments = new Documents(uploadedFiles);
+
         await newDocuments.save();
-
-        // Update the profile to reference the new Documents entry
+        console.log("New Documents:", newDocuments);
         profile.documents = newDocuments._id;
+        console.log("Profile:", profile);
         await profile.save();
 
         return res.status(201).json({
@@ -83,6 +77,7 @@ exports.uploadDocuments = async (req, res) => {
             documents: newDocuments
         });
     } catch (error) {
+        console.log("Error in uploadDocuments:", error);
         console.error("Error in uploadDocuments:", error);
         return res.status(500).json({
             success: false,
@@ -94,73 +89,56 @@ exports.uploadDocuments = async (req, res) => {
 
 exports.updateDocuments = async (req, res) => {
     try {
-        // const { } = req.params;
-        const { documentId ,category, files } = req.body;
-
-        // Check if documentId is valid
+        const { documentId } = req.params;
+        
         const existingDocument = await Documents.findById(documentId);
         if (!existingDocument) {
             return res.status(404).json({ message: 'Documents not found' });
         }
 
-        // Function to upload files to Cloudinary and return URLs
-        const uploadFiles = async (files) => {
-            const uploadedFileUrls = [];
-
-            for (const file of files) {
-                const { path } = file;
-                const uploaded = await uploadImageToCloudinary(path); // Upload file to Cloudinary
-                uploadedFileUrls.push(uploaded.secure_url); // Push Cloudinary URL to array
-            }
-            console.log("Uploaded file URLs:", uploadedFileUrls);
-            return uploadedFileUrls;
-        };
-
-        // Upload new files and get Cloudinary URLs
-        const newFileUrls = await uploadFiles(files);
-
-        // Update the existing document based on the specified category
-        switch (category) {
-            case 'photos':
-                existingDocument.photos = existingDocument.photos.concat(newFileUrls);
-                break;
-            case 'familyPhoto':
-                existingDocument.familyPhoto = existingDocument.familyPhoto.concat(newFileUrls);
-                break;
-            case 'educationDocuments':
-                existingDocument.educationDocuments = existingDocument.educationDocuments.concat(newFileUrls);
-                break;
-            case 'incomeProofs':
-                existingDocument.incomeProofs = existingDocument.incomeProofs.concat(newFileUrls);
-                break;
-            case 'propertyProofs':
-                existingDocument.propertyProofs = existingDocument.propertyProofs.concat(newFileUrls);
-                break;
-            case 'addressProofs':
-                existingDocument.addressProofs = existingDocument.addressProofs.concat(newFileUrls);
-                break;
-            case 'idProofs':
-                existingDocument.idProofs = existingDocument.idProofs.concat(newFileUrls);
-                break;
-            case 'otherDocuments':
-                existingDocument.otherDocuments = existingDocument.otherDocuments.concat(newFileUrls);
-                break;
-            default:
-                return res.status(400).json({ message: 'Invalid category' });
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).json({ message: 'No files were uploaded.' });
         }
 
-        // Save the updated document
+        const uploadFiles = async (files) => {
+            if (!files) return [];
+            const fileArray = Array.isArray(files) ? files : [files];
+            const uploadPromises = fileArray.map(async (file) => {
+                if (file && file.path) {
+                    try {
+                        const uploaded = await uploadImageToCloudinary(file.path);
+                        return uploaded.secure_url;
+                    } catch (error) {
+                        console.error("Error uploading file to Cloudinary:", error);
+                        return null;
+                    }
+                }
+                return null;
+            });
+            return (await Promise.all(uploadPromises)).filter(url => url !== null);
+        };
+
+        const categories = ['photos', 'familyPhoto', 'educationDocuments', 'incomeProofs', 'propertyProofs', 'addressProofs', 'idProofs', 'otherDocuments'];
+
+        for (const category of categories) {
+            if (req.files[category]) {
+                const newFileUrls = await uploadFiles(req.files[category]);
+                existingDocument[category] = existingDocument[category].concat(newFileUrls);
+            }
+        }
+
         await existingDocument.save();
 
         return res.status(200).json({
-            message: `Documents updated successfully in category: ${category}`,
+            message: 'Documents updated successfully',
             documents: existingDocument
         });
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: "Failed to update documents. Please try again."
+            message: "Failed to update documents. Please try again.",
+            error: error.message
         });
     }
 };
