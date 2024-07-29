@@ -22,7 +22,7 @@ const profile = require('./routes/Profile')
 const property = require('./routes/Property')
 const working = require('./routes/Working')
 const dashboard = require('./routes/Dashboard')
-
+const subscription = require('./routes/Subscription')
 dotenv.config()
 
 const PORT = process.env.PORT || 4000
@@ -76,7 +76,7 @@ app.use('/api/v1/profile', profile)
 app.use('/api/v1/property', property)
 app.use('/api/v1/working', working)
 app.use('/api/v1/dashboard', dashboard)
-
+app.use('/api/v1/subscription', subscription)
 
 
 app.listen(PORT, ()=>{
