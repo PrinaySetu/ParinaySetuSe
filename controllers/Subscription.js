@@ -5,6 +5,7 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const subscriptionPlans = require('../config/subscriptionPlan');
 const mailSender = require('../utils/mailSender'); // Import your mailSender function
+const { time } = require('console');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -29,7 +30,16 @@ exports.createSubscription = async (req, res) => {
 
         // console.log("Received planId:", planId);
         // console.log("User ID:", userId);
-
+        if(!planId){
+            return res.status(400).json({ error: 'Plan ID is required' });
+        }
+        if(!userId){
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+        if(Subscription.findOne({user:userId})){
+            console.log("User already has a subscription");
+            return res.status(400).json({ error: 'User already has a subscription' });
+        }
         const plan = subscriptionPlans.find(p => p.id === planId);
         if (!plan) {
             console.error('Plan not found for planId:', planId);
@@ -114,6 +124,7 @@ exports.handleCallback = async (req, res) => {
         //     razorpay_signature
         // };
         // await transaction.save();
+        
 
         await User.findByIdAndUpdate(subscription.user, { currentSubscription: subscription._id });
 
@@ -133,15 +144,46 @@ exports.handleCallback = async (req, res) => {
     }
 };
 
-exports.getCurrentSubscription = async (req, res) => {
+exports.getSubscriptionStatus = async (req, res) => {
+    console.log("getSubscriptionStatus function called");
     try {
-        const user = await User.findById(req.user.id).populate('currentSubscription');
-        if (!user.currentSubscription) {
-            return res.status(404).json({ message: 'No active subscription found' });
+        console.log('User ID:', req.user.id);
+        const user = req.user.id;
+        console.log('Searching for subscription');
+        const subscription = await Subscription.findOne({ user: user });
+        console.log('Subscription found:', subscription);
+        
+        if (!subscription) {
+            return res.status(404).json({
+                status: 'pending',
+
+                error: 'Subscription not found lalallal' });
         }
-        res.json(user.currentSubscription);
+
+        // Check if the subscription should be expired
+        if (subscription.status === 'active' && subscription.endDate && new Date() > subscription.endDate) {
+            subscription.status = 'expired';
+            await subscription.save();
+        }
+
+        // Return the subscription status
+        if (subscription.status === 'active') {
+            return res.json({
+                status: 'active',
+                endtime: subscription.endDate,
+                plan: subscription.planName
+            });
+        } else if (subscription.status === 'expired') {
+            return res.json({
+                status: 'expired'
+            });
+        } else {
+            return res.json({
+                status: 'pending'
+            });
+        }
     } catch (error) {
-        console.error('Error in getCurrentSubscription:', error);
+        console.error('Error in getSubscriptionStatus:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

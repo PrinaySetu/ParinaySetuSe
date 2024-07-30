@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getPlans, createSubscription, handleCallback, getCurrentSubscription } = require('../controllers/Subscription');
+const { getPlans, createSubscription, handleCallback, getSubscriptionStatus } = require('../controllers/Subscription');
 const {auth, isuser} = require('../middlewares/auth')
 
 // Route to get all subscription plans
@@ -13,6 +13,6 @@ router.post('/create',auth, createSubscription);
 router.post('/callback', auth ,handleCallback);
 
 // Route to get current user's subscription (requires authentication)
-router.get('/current',  getCurrentSubscription);
+router.put('/current',auth,  getSubscriptionStatus);
 
 module.exports = router;
