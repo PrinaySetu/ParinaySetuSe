@@ -28,25 +28,24 @@ exports.createSubscription = async (req, res) => {
         const { planId } = req.body;
         const userId = req.user.id;
 
-        // console.log("Received planId:", planId);
-        // console.log("User ID:", userId);
-        if(!planId){
+        if (!planId) {
             return res.status(400).json({ error: 'Plan ID is required' });
         }
-        if(!userId){
+        if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });
         }
-        if(Subscription.findOne({user:userId})){
+
+        const existingSubscription = await Subscription.findOne({ user: userId });
+        if (existingSubscription) {
             console.log("User already has a subscription");
             return res.status(400).json({ error: 'User already has a subscription' });
         }
+
         const plan = subscriptionPlans.find(p => p.id === planId);
         if (!plan) {
             console.error('Plan not found for planId:', planId);
             return res.status(404).json({ error: 'Plan not found' });
         }
-
-        // console.log("Found plan:", plan);
 
         const options = {
             amount: plan.price * 100,
@@ -54,10 +53,7 @@ exports.createSubscription = async (req, res) => {
             receipt: `rcpt_${userId.slice(-4)}_${planId}`.slice(0, 40)
         };
 
-        // console.log("Razorpay order options:", options);
-
         const order = await razorpay.orders.create(options);
-        // console.log("Razorpay order created:", order);
 
         if (!order || !order.id) {
             console.error("Invalid order object returned by Razorpay");
@@ -73,8 +69,6 @@ exports.createSubscription = async (req, res) => {
             transactionId: order.id
         });
 
-        // console.log("Subscription created:", subscription);
-
         return res.status(200).json({
             orderId: order.id,
             currency: order.currency,
@@ -87,6 +81,7 @@ exports.createSubscription = async (req, res) => {
         console.log("createSubscription function completed");
     }
 };
+
 
 
 exports.handleCallback = async (req, res) => {
