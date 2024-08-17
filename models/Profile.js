@@ -3,6 +3,10 @@ const MotherFamily = require('./MotherFamily')
 const Property = require('./Property')
 
 const ProfileSchema = new mongoose.Schema({
+    Age:{
+        type: Number,
+        
+    },
     fatherName:{
         type: String,
         // required: true

@@ -6,6 +6,7 @@ exports.createProfile = async (req, res) => {
   try {
     // Extract profile data from the request body
     const {
+      Age,
       fatherName,
       motherName,
       guardianName,
@@ -44,6 +45,7 @@ exports.createProfile = async (req, res) => {
 
     // Create a new profile data object
     const profileData = {
+      Age: Age ? Age.trim() : undefined,
       fatherName: fatherName ? fatherName.trim() : undefined,
       motherName: motherName ? motherName.trim() : undefined,
       guardianName: guardianName ? guardianName.trim() : undefined,
@@ -114,6 +116,7 @@ exports.updateProfile = async (req, res) => {
   
       // Extract updated profile data from the request body
       const {
+        Age,
         fatherName,
         motherName,
         guardianName,
@@ -140,6 +143,7 @@ exports.updateProfile = async (req, res) => {
       } = req.body;
   
       // Update profile fields with provided data
+      profile.Age = Age ? Age.trim() : profile.Age;
       profile.fatherName = fatherName ? fatherName.trim() : profile.fatherName;
       profile.motherName = motherName ? motherName.trim() : profile.motherName;
       profile.guardianName = guardianName ? guardianName.trim() : profile.guardianName;
