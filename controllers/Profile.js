@@ -250,8 +250,8 @@ exports.getProfileById = async (req, res) => {
     const { id } = req.body; // Extract profile ID from request body
     const { recommendedProfileIds } = req.body; // Extract recommended profile IDs from request body
   
-    console.log("Received ID:", id);
-    console.log("Received Recommended Profile IDs:", recommendedProfileIds);
+    // console.log("Received ID:", id);
+    // console.log("Received Recommended Profile IDs:", recommendedProfileIds);
   
     try {
       const user = await User.findById(id).populate('additionalDetails').exec();
@@ -274,7 +274,7 @@ exports.getProfileById = async (req, res) => {
       profile.recommendedProfiles.push(...recommendedProfileIds);
       const updatedProfile = await profile.save();
   
-      console.log("Updated Profile:", updatedProfile);
+      // console.log("Updated Profile:", updatedProfile);
   
       return res.status(200).json({
         success: true,
@@ -293,8 +293,8 @@ exports.getProfileById = async (req, res) => {
     const { id } = req.body; // Extract profile ID from request body
     const { recommendedProfileIds } = req.body; // Extract recommended profile IDs from request body
   
-    console.log("Received ID:", id);
-    console.log("Received Recommended Profile IDs:", recommendedProfileIds);
+    // console.log("Received ID:", id);
+    // console.log("Received Recommended Profile IDs:", recommendedProfileIds);
   
     try {
       const user = await User.findById(id).populate('additionalDetails').exec();
@@ -318,7 +318,7 @@ exports.getProfileById = async (req, res) => {
       profile.recommendedProfiles = recommendedProfileIds;
       const updatedProfile = await profile.save();
   
-      console.log("Updated Profile:", updatedProfile);
+      // console.log("Updated Profile:", updatedProfile);
   
       return res.status(200).json({
         success: true,
@@ -464,7 +464,7 @@ exports.showAllRecommendedProfiles = async (req, res) => {
       _id: { $in: user.additionalDetails.recommendedProfiles },
     }).populate('additionalDetails').exec();
     
-    console.log('Recommended Profiles:', recommendedProfiles);
+    // console.log('Recommended Profiles:', recommendedProfiles);
     res.status(200).json({
       success: true,
       message: 'Recommended profiles fetched successfully',
@@ -519,14 +519,14 @@ exports.getSingleRecommendedProfile = async (req, res) => {
 };
 
 exports.uploadProfilePicture = async (req, res) => {
-  console.log(req.files);
+  // console.log(req.files);
   try {
     const id = req.user.id;
     const user = await User.findById(id).exec();
     
   const image = req.files.profilePicture;
   const result = await uploadImageToCloudinary(image);
-  console.log(result);
+  // console.log(result);
   user.image = result.secure_url;
   await user.save();
   res.status(200).json({

@@ -139,7 +139,7 @@ exports.updateEducation = async (req, res) => {
             return res.status(404).json({message: 'Additional details not found'});
         }
         const educationId = user.additionalDetails.education;
-        console.log("This is id", educationId);
+        // console.log("This is id", educationId);
         if(!educationId){
             return res.status(404).json({message: 'Education ID not found in additional details'});
         }

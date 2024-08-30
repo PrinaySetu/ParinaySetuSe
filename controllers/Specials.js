@@ -67,11 +67,11 @@ exports.updateSpecials = async (req, res) => {
         }
 
         // Log the retrieved profile to debug if it has the correct specialId reference
-        console.log("Retrieved profile:", profile);
+        // console.log("Retrieved profile:", profile);
 
         // Extract the specialId from the profile's special field
         const specialId = profile.special;
-        console.log("This is specialId:", specialId);
+        // console.log("This is specialId:", specialId);
 
         if (!specialId) {
             return res.status(400).json({ message: 'Invalid specialId ID' });

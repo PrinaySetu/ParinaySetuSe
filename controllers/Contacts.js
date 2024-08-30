@@ -69,11 +69,11 @@ exports.updateContacts = async (req, res) => {
         }
 
         // Log the retrieved profile to debug if it has the correct education reference
-        console.log("Retrieved profile:", profile);
+        // console.log("Retrieved profile:", profile);
 
         // Extract the contactId from the profile's education field
         const contactId = profile.contacts;
-        console.log("This is contactId", contactId);
+        // console.log("This is contactId", contactId);
 
         if (!contactId) {
             return res.status(400).json({ message: 'contactId  is required' });
@@ -127,7 +127,7 @@ exports.getUserContacts = async (req, res) => {
         }
     
         const contactId = user.additionalDetails.contacts;
-        console.log("This is id", contactId);
+        // console.log("This is id", contactId);
         if (!contactId) {
             return res.status(404).json({
                 success: false,

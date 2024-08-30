@@ -16,7 +16,7 @@ exports.addFamilyDetails = async (req, res) => {
             sisters   // Array of sisters
         } = req.body;
 
-        console.log('Received data:', req.body); // Log the received data
+        // console.log('Received data:', req.body); // Log the received data
 
         // Ensure the user and profile ID are defined
         if (!req.user || !req.user.additionalDetails) {
@@ -91,11 +91,11 @@ exports.updateFamilyDetails = async (req, res) => {
         }
 
         // Log the retrieved profile to debug if it has the correct education reference
-        console.log("Retrieved profile:", profile);
+        // console.log("Retrieved profile:", profile);
 
         // Extract the familyDetailsId from the profile's familyDetails field
         const familyDetailsId = profile.familyDetails;
-        console.log("This is familyDetailsId", familyDetailsId);
+        // console.log("This is familyDetailsId", familyDetailsId);
 
         if (!familyDetailsId) {
             return res.status(400).json({ message: 'familyDetailsId ID is required' });
