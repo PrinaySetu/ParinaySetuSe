@@ -6,7 +6,7 @@ const User = require('../models/User');
 const subscriptionPlans = require('../config/subscriptionPlan');
 const mailSender = require('../utils/mailSender'); // Import your mailSender function
 const { time } = require('console');
-
+const { paymentSuccessEmail } = require("../mail/templates/paymentSuccessEmail")
 // Initialize Razorpay
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
@@ -125,13 +125,22 @@ exports.handleCallback = async (req, res) => {
 
         // Send a successful payment email
         const user = await User.findById(subscription.user);
-        const mailOptions = {
-            subject: 'Payment Successful',
-            text: `Dear ${user.name},\n\nYour payment for the ${subscription.planName} plan was successful. Your subscription is now active.\n\nThank you for choosing our service.\n\nBest regards,\nYour Company Name`
-        };
+        // const mailOptions = {
+        //     subject: 'Payment Successful',
+        //     text: `Dear ${user.name},\n\nYour payment for the ${subscription.planName} plan was successful. Your subscription is now active.\n\nThank you for choosing our service.\n\nBest regards,\nYour Company Name`
+        // };
 
-        mailSender(user.email, mailOptions.subject, mailOptions.text);
-
+        // mailSender(user.email, mailOptions.subject, mailOptions.text);
+        await mailSender(
+            user.email,
+            `Payment Received`,
+            paymentSuccessEmail(
+              `${user.firstName} ${user.lastName}`,
+              subscription.amount / 100,
+              razorpay_order_id,
+              razorpay_payment_id
+            )
+          )
         res.json({ message: 'Payment successful, subscription activated' });
     } catch (error) {
         console.error('Error in handleCallback:', error);

@@ -13,7 +13,7 @@ const mailSender = async (email, subject, text) => {
         });
             let info = await transporter.sendMail(
                 {
-                    from: 'Emerging Tech4Health',
+                    from: 'Parinay Setu',
                     to:`${email}`,
                     subject: `${subject}`,
                     html: `${text}`,
