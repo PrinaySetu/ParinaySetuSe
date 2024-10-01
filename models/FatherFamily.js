@@ -8,7 +8,6 @@ const tauSchema= new mongoose.Schema({
     },
     tauStatus:{
         type:Boolean,
-        default:false
     }
 
 })
@@ -21,7 +20,6 @@ const buaSchema= new mongoose.Schema({
     },
     buaStatus:{
         type:Boolean,
-        default:false
     }
 
 
@@ -35,7 +33,6 @@ const chachaSchema= new mongoose.Schema({
     },
     chachaStatus:{
         type:Boolean,
-        default:false
     }
 
 })
@@ -54,11 +51,9 @@ const FatherFamilySchema = new mongoose.Schema({
     },
     grandFatherStatus:{
         type:Boolean,
-        default:false
     },
     grandMotherStatus:{
         type:Boolean,
-        default:false
     },
     tau:[tauSchema],
     bua:[buaSchema],
