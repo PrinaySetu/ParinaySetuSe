@@ -8,7 +8,6 @@ const mamaSchema= new mongoose.Schema({
     },
     mamaStatus:{
         type:Boolean,
-        default:false
     }
 
 })
@@ -21,7 +20,6 @@ const mausiSchema= new mongoose.Schema({
     },
     mausiStatus:{
         type:Boolean,
-        default:false
     }
 
 
@@ -38,7 +36,6 @@ const MotherFamilySchema = new mongoose.Schema({
 
     grandMotherStatus:{
         type:Boolean,
-        default:false
     },
    
     mama:[mamaSchema],

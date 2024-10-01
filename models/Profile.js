@@ -56,11 +56,9 @@ const ProfileSchema = new mongoose.Schema({
     },
     maritalStatus:{
         type:String,
-        enum:["unmarried","divorced","widow"]
     },
     residenceType:{
         type:String,
-        enum:["indian", "nri","foreigner"]
     },
     gotra:{
         type:String
